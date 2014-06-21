@@ -1,7 +1,7 @@
 package Test::Subtests;
 
 use base 'Test::Builder::Module';
-our @EXPORT = qw(one_of);
+our @EXPORT = qw(one_of none_of);
 
 use Test::Builder;
 
@@ -135,6 +135,28 @@ sub one_of {
             $count++ if $result->{ok};
         }
         return $count == 1;
+    };
+
+    # Run the subtests.
+    return _subtest($name, $code, $check);
+}
+
+=head2 none_of NAME, CODE
+
+=cut
+
+sub none_of {
+    # Process arguments.
+    my ($name, $code) = @_;
+
+    # Define the check: all subtests must fail.
+    my $check = sub {
+        my ($child) = @_;
+        my $count = 0;
+        foreach my $result (@{$child->{Test_Results}}) {
+            $count++ if $result->{ok};
+        }
+        return $count == 0;
     };
 
     # Run the subtests.
