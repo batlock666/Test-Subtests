@@ -5,7 +5,7 @@ use Module::Build;
 
 my $builder = Module::Build->new(
     module_name         => 'Test::Subtests',
-    license             => 'Artistic_2_0',
+    license             => 'LGPL_3_0',
     dist_author         => q{Bert Vanderbauwhede <batlock666@gmail.com>},
     dist_version_from   => 'lib/Test/Subtests.pm',
     dist_abstract       => 'Different kinds of subtests.',
