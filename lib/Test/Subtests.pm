@@ -1,7 +1,7 @@
 package Test::Subtests;
 
 use base 'Test::Builder::Module';
-our @EXPORT = qw();
+our @EXPORT = qw(one_of);
 
 use Test::Builder;
 
@@ -119,11 +119,26 @@ sub _subtest {
     return $finalize;
 }
 
-=head2 function2
+=head2 one_of NAME, CODE
 
 =cut
 
-sub function2 {
+sub one_of {
+    # Process arguments.
+    my ($name, $code) = @_;
+
+    # Define the check: only one subtest must pass.
+    my $check = sub {
+        my ($child) = @_;
+        my $count = 0;
+        foreach my $result (@{$child->{Test_Results}}) {
+            $count++ if $result->{ok};
+        }
+        return $count == 1;
+    };
+
+    # Run the subtests.
+    return _subtest($name, $code, $check);
 }
 
 =head1 AUTHOR
