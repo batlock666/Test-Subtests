@@ -1,7 +1,7 @@
 package Test::Subtests;
 
 use base 'Test::Builder::Module';
-our @EXPORT = qw(one_of none_of some_of all_of);
+our @EXPORT = qw(one_of none_of some_of all_of ignore);
 
 use Test::Builder;
 
@@ -201,6 +201,23 @@ sub all_of {
             $count++ unless $result->{ok};
         }
         return $count == 0;
+    };
+
+    # Run the subtests.
+    return _subtest($name, $code, $check);
+}
+
+=head2 ignore NAME, CODE
+
+=cut
+
+sub ignore {
+    # Process arguments.
+    my ($name, $code) = @_;
+
+    # Define the check: always pass.
+    my $check = sub {
+        return 1;
     };
 
     # Run the subtests.
