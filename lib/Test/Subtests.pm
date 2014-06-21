@@ -1,8 +1,15 @@
 package Test::Subtests;
 
+use base 'Test::Builder::Module';
+our @EXPORT = qw();
+
+use Test::Builder;
+
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
+
+my $CLASS = __PACKAGE__;
 
 =head1 NAME
 
@@ -35,11 +42,81 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=head2 _subtest NAME, CODE, CHECK
 
 =cut
 
-sub function1 {
+sub _subtest {
+    # Process arguments.
+    my ($name, $code, $check) = @_;
+
+    # Get the caller's name.
+    my $caller = (caller(1))[3];
+    $caller =~ s/.*:://;
+
+    # Get the test builder.
+    my $builder = $CLASS->builder;
+
+    # Check the arguments $code and $check.
+    if ('CODE' ne ref $code) {
+        $builder->croak("$caller()'s second argument must be a code ref");
+    }
+    if ($check) {
+        if ('CODE' ne ref $check) {
+            $builder->croak("$caller()'s third argument must be a code ref'");
+        }
+    }
+
+    my $error;
+    my $child;
+    my $parent = {};
+    {
+        # Override the level.
+        local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+        # Create a child test builder, and replace the parent by it.
+        $child = $builder->child($name);
+        Test::Builder::_copy($builder,  $parent);
+        Test::Builder::_copy($child, $builder);
+
+        # Run the subtests and catch the errors.
+        my $run_subtests = sub {
+            $builder->note("$caller: $name");
+            $code->();
+            $builder->done_testing unless $builder->_plan_handled;
+            return 1;
+        };
+        if (!eval { $run_subtests->() }) {
+            $error = $@;
+        }
+    }
+
+    # Restore the child and parent test builders.
+    Test::Builder::_copy($builder,   $child);
+    Test::Builder::_copy($parent, $builder);
+
+    # Restore the parent's TODO.
+    $builder->find_TODO(undef, 1, $child->{Parent_TODO});
+
+    # Die after the parent is restored.
+    die $error if $error and !eval { $error->isa('Test::Builder::Exception') };
+
+    # Override the level.
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    # Check the results of the subtests.
+    if ($check) {
+        $child->no_ending(1);
+        $child->is_passing(&$check($child));
+    }
+
+    # Finalize the child test builder.
+    my $finalize = $child->finalize;
+
+    # Bail out if the child test builder bailed out.
+    $builder->BAIL_OUT($child->{Bailed_Out_Reason}) if $child->{Bailed_Out};
+
+    return $finalize;
 }
 
 =head2 function2
