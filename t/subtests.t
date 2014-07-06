@@ -4,7 +4,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use Test::Builder::Tester tests => 20;
+use Test::Builder::Tester tests => 24;
 use Test::More;
 use Test::Subtests;
 
@@ -182,6 +182,38 @@ test_out("    # all_of: $description");
 tests_out(3, 3);
 pass_out($description);
 all_of $description => sub { tests(3, 3) };
+test_test($description);
+
+# most_of, pass=0
+$description = 'most_of, pass=0';
+test_out("    # most_of: $description");
+tests_out(3, 0);
+fail_out($description, line_num(+1));
+most_of $description => sub { tests(3, 0) };
+test_test($description);
+
+# most_of, pass=1
+$description = 'most_of, pass=1';
+test_out("    # most_of: $description");
+tests_out(3, 1);
+fail_out($description, line_num(+1));
+most_of $description => sub { tests(3, 1) };
+test_test($description);
+
+# most_of, pass=2
+$description = 'most_of, pass=2';
+test_out("    # most_of: $description");
+tests_out(3, 2);
+pass_out($description);
+most_of $description => sub { tests(3, 2) };
+test_test($description);
+
+# most_of, pass=3
+$description = 'most_of, pass=3';
+test_out("    # most_of: $description");
+tests_out(3, 3);
+pass_out($description);
+most_of $description => sub { tests(3, 3) };
 test_test($description);
 
 # ignore, pass=0
